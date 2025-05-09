@@ -1,4 +1,3 @@
-// src/pages/register.js
 import { useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 
@@ -10,6 +9,8 @@ export default function Register() {
     phone: '',
   });
 
+  const [message, setMessage] = useState({ type: '', text: '' }); // State for feedback messages
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -20,20 +21,47 @@ export default function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setMessage({ type: '', text: '' }); // Reset message state
+
+    // Validate phone number
+    const phoneRegex = /^[0-9]{10}$/; // Example: 10-digit phone number
+    if (!phoneRegex.test(formData.phone)) {
+      setMessage({ type: 'error', text: 'Invalid phone number. Please enter a 10-digit number.' });
+      return;
+    }
+
     const { data, error } = await supabase
       .from('cowsanctuaries')
       .insert([formData]);
 
     if (error) {
       console.error('Error inserting data:', error);
+      if (error.code === '23505') { // Unique violation error code
+        setMessage({ type: 'error', text: 'Duplicate entry detected. Please use unique information.' });
+      } else {
+        setMessage({ type: 'error', text: 'Failed to register. Please try again.' });
+      }
     } else {
       console.log('Data inserted:', data);
+      setMessage({ type: 'success', text: 'Registration successful!' });
+      setFormData({ name: '', email: '', address: '', phone: '' }); // Reset form
     }
   };
 
   return (
     <div style={styles.container}>
       <h1 style={styles.title}>Registration Form</h1>
+      {message.text && (
+        <div
+          style={{
+            ...styles.message,
+            backgroundColor: message.type === 'success' ? '#d4edda' : '#f8d7da',
+            color: message.type === 'success' ? '#155724' : '#721c24',
+          }}
+        >
+          {message.text}
+        </div>
+      )}
       <form onSubmit={handleSubmit} style={styles.form}>
         <div style={styles.formGroup}>
           <label htmlFor="name" style={styles.label}>Name:</label>
@@ -126,5 +154,11 @@ const styles = {
     backgroundColor: '#0070f3',
     color: '#fff',
     cursor: 'pointer',
+  },
+  message: {
+    padding: '10px',
+    borderRadius: '5px',
+    marginBottom: '15px',
+    textAlign: 'center',
   },
 };
