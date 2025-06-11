@@ -6,14 +6,52 @@ export default function Register() {
     name: '',
     email: '',
     address: '',
-    phone: '',    
+    phone: '',
+    organizationtype: '',
+    organizationtypeother: '',
+    registeredorgname: '',
+    founders: '',
+    foundercontact: '',
+    country: '',
+    state: '',
+    city: '',
+    visitaddress: '',
+    locationlink: '',
+    website: '',
+    sociallinks: '',
     hostingdeclaration: false,
     eligibilitydeclaration: false,
     informationdeclaration: false,
     sharingdetailsdeclaration: false,
     socialmediaconsentdeclaration: false,
-    agreeTab0: false,
-    agreeTab1: false,
+    agreetab0: false,
+    agreetab1: false,
+    numcows: '0',
+    numbullsoxencalves: '0',
+    area: '',
+    visitorcapacity: '0',
+    teammembers: '0',
+    volunteers: '0',
+    otheractivities: '',
+    uniqueinitiative: '',
+    awards: '',
+    participation: '',
+    eventdays: '', // 'all' or 'custom'
+    customdays: '',
+    customdaysreason: '',
+    visittimingtype: '', // 'all' or 'slot'
+    alldayfrom: '',
+    alldayto: '',
+    slotmorningfrom: '',
+    slotmorningto: '',
+    slotafternoonfrom: '',
+    slotafternoonto: '',
+    sloteveningfrom: '',
+    sloteveningto: '',
+    activitiesonsite: [], // array of strings
+    activitiesonsiteother: '',
+    activitieslocality: [], // array of strings
+    activitieslocalityother: '',
   });
 
   const [message, setMessage] = useState({ type: '', text: '' });
@@ -21,6 +59,7 @@ export default function Register() {
   const [activeTab, setActiveTab] = useState(0); // 0 or 1 for the two tabs
   const [tab0Scrolled, setTab0Scrolled] = useState(false);
   const [tab1Scrolled, setTab1Scrolled] = useState(false);
+  const [warning, setWarning] = useState(''); // Add after message state
 
   const tab0Ref = useRef(null);
   const tab1Ref = useRef(null);
@@ -46,6 +85,11 @@ export default function Register() {
   };
 
   const handleNext = () => {
+    if (step === 0 && !(formData.agreetab0 && formData.agreetab1)) {
+      setWarning('Please scroll to the end and agree to both Event and Instructions before proceeding.');
+      return;
+    }
+    setWarning('');
     setStep((prevStep) => prevStep + 1);
   };
 
@@ -74,9 +118,21 @@ export default function Register() {
       return;
     }
 
+    const submissionData = { ...formData };
+
+    // If alldayfrom and alldayto are filled, remove all slot fields from submission
+    if (submissionData.alldayfrom && submissionData.alldayto) {
+      delete submissionData.slotmorningfrom;
+      delete submissionData.slotmorningto;
+      delete submissionData.slotafternoonfrom;
+      delete submissionData.slotafternoonto;
+      delete submissionData.sloteveningfrom;
+      delete submissionData.sloteveningto;
+    }
+
     const { data, error } = await supabase
-      .from('cowsanctuaries')
-      .insert([formData]);
+      .from('cowsanctuaries108')
+      .insert([submissionData]);
 
     if (error) {
       console.error('Error inserting data:', error);
@@ -93,13 +149,51 @@ export default function Register() {
         email: '',
         address: '',
         phone: '',
+        organizationtype: '',
+        organizationtypeother: '',
+        registeredorgname: '',
+        founders: '',
+        foundercontact: '',
+        country: '',
+        state: '',
+        city: '',
+        visitaddress: '',
+        locationlink: '',
+        website: '',
+        sociallinks: '',
         hostingdeclaration: false,
         eligibilitydeclaration: false,
         informationdeclaration: false,
         sharingdetailsdeclaration: false,
         socialmediaconsentdeclaration: false,
-        agreeTab0: false,
-        agreeTab1: false,
+        agreetab0: false,
+        agreetab1: false,
+        numcows: '',
+        numbullsoxencalves: '',
+        area: '',
+        visitorcapacity: '',
+        teammembers: '',
+        volunteers: '',
+        otheractivities: '',
+        uniqueinitiative: '',
+        awards: '',
+        participation: '',
+        eventdays: '', // 'all' or 'custom'
+        customdays: '',
+        customdaysreason: '',
+        visittimingtype: '', // 'all' or 'slot'
+        alldayfrom: '',
+        alldayto: '',
+        slotmorningfrom: '',
+        slotmorningto: '',
+        slotafternoonfrom: '',
+        slotafternoonto: '',
+        sloteveningfrom: '',
+        sloteveningto: '',
+        activitiesonsite: [], // array of strings
+        activitiesonsiteother: '',
+        activitieslocality: [], // array of strings
+        activitieslocalityother: '',
       });
       setTab0Scrolled(false);
       setTab1Scrolled(false);
@@ -107,14 +201,13 @@ export default function Register() {
   };
 
   // Only allow proceeding if both checkboxes are checked
-  const canProceed = formData.agreeTab0 && formData.agreeTab1;
+  const canProceed = formData.agreetab0 && formData.agreetab1;
 
   return (
     <div style={styles.container}>
       <h1 style={styles.title}>
         <b>Registration Form</b>
-      </h1>
-       <b>Note: Scroll till end on both pages & agree to proceed</b>      
+      </h1>     
       {message.text && (
         <div
           style={{
@@ -124,6 +217,19 @@ export default function Register() {
           }}
         >
           {message.text}
+        </div>
+      )}
+      {warning && (
+        <div
+          style={{
+            ...styles.message,
+            backgroundColor: '#fff3cd',
+            color: '#856404',
+            border: '1px solid #ffeeba',
+            marginBottom: 16,
+          }}
+        >
+          {warning}
         </div>
       )}
       <form
@@ -209,8 +315,8 @@ export default function Register() {
                   <label style={styles.label}>
                     <input
                       type="checkbox"
-                      name="agreeTab0"
-                      checked={formData.agreeTab0}
+                      name="agreetab0"
+                      checked={formData.agreetab0}
                       onChange={handleChange}
                       disabled={!tab0Scrolled}
                       style={{ marginRight: '10px' }}
@@ -247,8 +353,8 @@ export default function Register() {
                   <label style={styles.label}>
                     <input
                       type="checkbox"
-                      name="agreeTab1"
-                      checked={formData.agreeTab1}
+                      name="agreetab1"
+                      checked={formData.agreetab1}
                       onChange={handleChange}
                       disabled={!tab1Scrolled}
                       style={{ marginRight: '10px' }}
@@ -261,36 +367,141 @@ export default function Register() {
             <button
               type="button"
               onClick={handleNext}
-              style={styles.button}
+              style={{
+                ...styles.button,
+                backgroundColor: !canProceed ? '#cccccc' : styles.button.backgroundColor,
+                cursor: !canProceed ? 'not-allowed' : 'pointer',
+              }}
               disabled={!canProceed}
             >
               Proceed to Registration
             </button>
           </div>
         )}
+        
         {step === 1 && (
           <div>
             <div style={styles.formGroup}>
-              <label htmlFor="name" style={styles.label}>
-                Name:
-              </label>
+              <label style={styles.label}>We are a –</label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '18px', marginBottom: '10px' }}>
+                {['Sanctuary', 'Rescue Center', 'Cruelty-free Dairy Farm', 'Farm Community', 'Others'].map((type) => (
+                  <label key={type}>
+                    <input
+                      type="radio"
+                      name="organizationtype"
+                      value={type}
+                      checked={formData.organizationtype === type}
+                      onChange={handleChange}
+                      required
+                      style={{ marginRight: 8 }}
+                    />
+                    {type}
+                  </label>
+                ))}
+              </div>
+              {formData.organizationtype === 'Others' && (
+                <input
+                  type="text"
+                  name="organizationtypeother"
+                  value={formData.organizationtypeother || ''}
+                  onChange={handleChange}
+                  placeholder="Please mention"
+                  style={styles.input}
+                  required
+                />
+              )}
+            </div>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Name of your Registered Organization:</label>
               <input
                 type="text"
-                id="name"
-                name="name"
-                value={formData.name}
+                name="registeredorgname"
+                value={formData.registeredorgname}
                 onChange={handleChange}
                 required
                 style={styles.input}
               />
             </div>
             <div style={styles.formGroup}>
-              <label htmlFor="email" style={styles.label}>
-                Email:
-              </label>
+              <label style={styles.label}>Name of the Founder(s), Trustee(s), Owner(s):</label>
+              <input
+                type="text"
+                name="founders"
+                value={formData.founders}
+                onChange={handleChange}
+                required
+                style={styles.input}
+              />
+            </div>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Contact details of any one of the Founder/Trustee/Owner:</label>
+              <input
+                type="text"
+                name="foundercontact"
+                value={formData.foundercontact}
+                onChange={handleChange}
+                required
+                style={styles.input}
+              />
+            </div>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Country:</label>
+              <input
+                type="text"
+                name="country"
+                value={formData.country}
+                onChange={handleChange}
+                required
+                style={styles.input}
+              />
+            </div>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>State / Province:</label>
+              <input
+                type="text"
+                name="state"
+                value={formData.state}
+                onChange={handleChange}
+                required
+                style={styles.input}
+              />
+            </div>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>City / Town / Village:</label>
+              <input
+                type="text"
+                name="city"
+                value={formData.city}
+                onChange={handleChange}
+                required
+                style={styles.input}
+              />
+            </div>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Address for visit:</label>
+              <input
+                type="text"
+                name="visitaddress"
+                value={formData.visitaddress}
+                onChange={handleChange}
+                required
+                style={styles.input}
+              />
+            </div>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Location link:</label>
+              <input
+                type="text"
+                name="locationlink"
+                value={formData.locationlink}
+                onChange={handleChange}
+                style={styles.input}
+              />
+            </div>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Email ID:</label>
               <input
                 type="email"
-                id="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
@@ -299,30 +510,33 @@ export default function Register() {
               />
             </div>
             <div style={styles.formGroup}>
-              <label htmlFor="address" style={styles.label}>
-                Address:
-              </label>
+              <label style={styles.label}>Phone No.:</label>
               <input
-                type="text"
-                id="address"
-                name="address"
-                value={formData.address}
+                type="tel"
+                name="phone"
+                value={formData.phone}
                 onChange={handleChange}
                 required
                 style={styles.input}
               />
             </div>
             <div style={styles.formGroup}>
-              <label htmlFor="phone" style={styles.label}>
-                Phone Number:
-              </label>
+              <label style={styles.label}>Website link:</label>
               <input
-                type="tel"
-                id="phone"
-                name="phone"
-                value={formData.phone}
+                type="text"
+                name="website"
+                value={formData.website}
                 onChange={handleChange}
-                required
+                style={styles.input}
+              />
+            </div>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Social Media links:</label>
+              <input
+                type="text"
+                name="sociallinks"
+                value={formData.sociallinks}
+                onChange={handleChange}
                 style={styles.input}
               />
             </div>
@@ -335,87 +549,544 @@ export default function Register() {
             </button>
             <button
               type="button"
-              onClick={handleNext}
+              onClick={() => setStep((prev) => prev + 1)}
               style={styles.button}
             >
               Next
             </button>
           </div>
         )}
+
         {step === 2 && (
           <div>
             <div style={styles.formGroup}>
-              <label htmlFor="hostingdeclaration" style={styles.label}>
-                <input
-                  type="checkbox"
-                  id="hostingdeclaration"
-                  name="hostingdeclaration"
-                  checked={formData.hostingdeclaration || false}
-                  onChange={handleChange}
-                  required
-                  style={{ marginRight: '10px' }}
-                />
-                I am interested in hosting the World Cow Day event as per the guidelines of the event.
-              </label>
+              <label style={styles.label}>Number of Cows:</label>
+              <input
+                type="number"
+                name="numcows"
+                value={formData.numcows}
+                onChange={handleChange}
+                min="0"
+                required
+                style={styles.input}
+              />
             </div>
             <div style={styles.formGroup}>
-              <label htmlFor="eligibilitydeclaration" style={styles.label}>
-                <input
-                  type="checkbox"
-                  id="eligibilitydeclaration"
-                  name="eligibilitydeclaration"
-                  checked={formData.eligibilitydeclaration || false}
-                  onChange={handleChange}
-                  required
-                  style={{ marginRight: '10px' }}
-                />
-                I agree with the eligibility criteria for hosting the World Cow Day event.
-              </label>
+              <label style={styles.label}>Number of Bulls, Oxen, Calves:</label>
+              <input
+                type="number"
+                name="numbullsoxencalves"
+                value={formData.numbullsoxencalves}
+                onChange={handleChange}
+                min="0"
+                style={styles.input}
+                required
+              />
             </div>
             <div style={styles.formGroup}>
-              <label htmlFor="informationdeclaration" style={styles.label}>
-                <input
-                  type="checkbox"
-                  id="informationdeclaration"
-                  name="informationdeclaration"
-                  checked={formData.informationdeclaration || false}
-                  onChange={handleChange}
-                  required
-                  style={{ marginRight: '10px' }}
-                />
-                I confirm all the information provided is true.
-              </label>
+              <label style={styles.label}>Area of the sanctuary:</label>
+              <input
+                type="text"
+                name="area"
+                value={formData.area}
+                onChange={handleChange}
+                style={styles.input}
+                required
+              />
             </div>
             <div style={styles.formGroup}>
-              <label htmlFor="sharingdetailsdeclaration" style={styles.label}>
-                <input
-                  type="checkbox"
-                  id="sharingdetailsdeclaration"
-                  name="sharingdetailsdeclaration"
-                  checked={formData.sharingdetailsdeclaration || false}
-                  onChange={handleChange}
-                  required
-                  style={{ marginRight: '10px' }}
-                />
-                I give my consent to share my sanctuary details with the participants during the World Cow Day event
-                through the World Cow Day website.
-              </label>
+              <label style={styles.label}>Number of visitors (approx) I can (or wish to) accommodate in a day:</label>
+              <input
+                type="number"
+                name="visitorcapacity"
+                value={formData.visitorcapacity}
+                onChange={handleChange}
+                min="0"
+                style={styles.input}
+                required
+              />
             </div>
             <div style={styles.formGroup}>
-              <label htmlFor="socialmediaconsentdeclaration" style={styles.label}>
-                <input
-                  type="checkbox"
-                  id="socialmediaconsentdeclaration"
-                  name="socialmediaconsentdeclaration"
-                  checked={formData.socialmediaconsentdeclaration || false}
-                  onChange={handleChange}
-                  required
-                  style={{ marginRight: '10px' }}
-                />
-                I give my consent to use the content that will be posted by us on our social media handles during the
-                World Cow Day Event for promotion of World Cow Day activities.
-              </label>
+              <label style={styles.label}>No of Team Members you can involve for organizing the event:</label>
+              <input
+                type="number"
+                name="teammembers"
+                value={formData.teammembers}
+                onChange={handleChange}
+                min="0"
+                style={styles.input}
+                required
+              />
             </div>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>No of Volunteers you can involve for any support / services required during the event:</label>
+              <input
+                type="number"
+                name="volunteers"
+                value={formData.volunteers}
+                onChange={handleChange}
+                min="0"
+                style={styles.input}
+                required
+              />
+            </div>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Other activities your organization is involved with along with cow care:</label>
+              <textarea
+                name="otheractivities"
+                value={formData.otheractivities}
+                onChange={handleChange}
+                style={styles.input}
+                rows={2}
+              />
+            </div>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Any unique initiative you have taken for cow care:</label>
+              <textarea
+                name="uniqueinitiative"
+                value={formData.uniqueinitiative}
+                onChange={handleChange}
+                style={styles.input}
+                rows={2}
+              />
+            </div>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Any awards/recognition received by your organization:</label>
+              <textarea
+                name="awards"
+                value={formData.awards}
+                onChange={handleChange}
+                style={styles.input}
+                rows={2}
+              />
+            </div>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Any participation in any event, conference, summit promoting cow care:</label>
+              <textarea
+                name="participation"
+                value={formData.participation}
+                onChange={handleChange}
+                style={styles.input}
+                rows={2}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={handleBack}
+              style={styles.button}
+            >
+              Back
+            </button>
+            <button
+              type="button"
+              onClick={() => setStep((prev) => prev + 1)}
+              style={styles.button}
+            >
+              Next
+            </button>
+          </div>
+        )}
+
+        {step === 3 && (
+          <div>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>I wish to host the World Cows Day 2025 Event –</label>
+              <div>
+                <label>
+                  <input
+                    type="radio"
+                    name="eventdays"
+                    value="all"
+                    checked={formData.eventdays === 'all'}
+                    onChange={handleChange}
+                    required
+                    style={{ marginRight: 8 }}
+                  />
+                  On All Days - 15th Aug 2025 to 01st Sep 2025.
+                </label>
+              </div>
+              <div>
+                <label>
+                  <input
+                    type="radio"
+                    name="eventdays"
+                    value="custom"
+                    checked={formData.eventdays === 'custom'}
+                    onChange={handleChange}
+                    required
+                    style={{ marginRight: 8 }}
+                  />
+                  On Custom Days - 
+                </label>
+                <input
+                  type="text"
+                  name="customdays"
+                  value={formData.customdays}
+                  onChange={handleChange}
+                  placeholder="Enter custom days (01st Sep 2025 is mandatory)"
+                  style={{ ...styles.input, marginTop: 8, marginBottom: 8 }}
+                  disabled={formData.eventdays !== 'custom'}
+                />
+                <input
+                  type="text"
+                  name="customdaysreason"
+                  value={formData.customdaysreason}
+                  onChange={handleChange}
+                  placeholder="Reason for not hosting all days"
+                  style={styles.input}
+                  disabled={formData.eventdays !== 'custom'}
+                />
+              </div>
+            </div>
+
+            <div style={styles.formGroup}>
+              <label style={styles.label}>I wish to confirm the below visit timings on the days selected above –</label>
+              <div>
+                <label>
+                  <input
+                    type="radio"
+                    name="visittimingtype"
+                    value="all"
+                    checked={formData.visittimingtype === 'all'}
+                    onChange={handleChange}
+                    required
+                    style={{ marginRight: 8 }}
+                  />
+                  All Day – Timings:
+                </label>
+                <span style={{ marginLeft: 12 }}>
+                  From <input
+                    type="time"
+                    name="alldayfrom"
+                    value={formData.alldayfrom}
+                    onChange={handleChange}
+                    style={{ marginRight: 8 }}
+                    disabled={formData.visittimingtype !== 'all'}
+                  />
+                  To <input
+                    type="time"
+                    name="alldayto"
+                    value={formData.alldayto}
+                    onChange={handleChange}
+                    disabled={formData.visittimingtype !== 'all'}
+                  />
+                </span>
+              </div>
+              <div style={{ marginTop: 10 }}>
+                <label>
+                  <input
+                    type="radio"
+                    name="visittimingtype"
+                    value="slot"
+                    checked={formData.visittimingtype === 'slot'}
+                    onChange={handleChange}
+                    required
+                    style={{ marginRight: 8 }}
+                  />
+                  Selected slot – Timings:
+                </label>
+                <div style={{ marginLeft: 24, marginTop: 6 }}>
+                  Morning - From <input
+                    type="time"
+                    name="slotmorningfrom"
+                    value={formData.slotmorningfrom}
+                    onChange={handleChange}
+                    style={{ marginRight: 8 }}
+                    disabled={formData.visittimingtype !== 'slot'}
+                  />
+                  To <input
+                    type="time"
+                    name="slotmorningto"
+                    value={formData.slotmorningto}
+                    onChange={handleChange}
+                    disabled={formData.visittimingtype !== 'slot'}
+                  />
+                </div>
+                <div style={{ marginLeft: 24, marginTop: 6 }}>
+                  Afternoon - From <input
+                    type="time"
+                    name="slotafternoonfrom"
+                    value={formData.slotafternoonfrom}
+                    onChange={handleChange}
+                    style={{ marginRight: 8 }}
+                    disabled={formData.visittimingtype !== 'slot'}
+                  />
+                  To <input
+                    type="time"
+                    name="slotafternoonto"
+                    value={formData.slotafternoonto}
+                    onChange={handleChange}
+                    disabled={formData.visittimingtype !== 'slot'}
+                  />
+                </div>
+                <div style={{ marginLeft: 24, marginTop: 6 }}>
+                  Evening - From <input
+                    type="time"
+                    name="sloteveningfrom"
+                    value={formData.sloteveningfrom}
+                    onChange={handleChange}
+                    style={{ marginRight: 8 }}
+                    disabled={formData.visittimingtype !== 'slot'}
+                  />
+                  To <input
+                    type="time"
+                    name="sloteveningto"
+                    value={formData.sloteveningto}
+                    onChange={handleChange}
+                    disabled={formData.visittimingtype !== 'slot'}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div style={styles.formGroup}>
+              <label style={styles.label}>
+                Types of activities we wish to conduct for visitors within the sanctuary/farm during the event on our selected days of participation:
+              </label>
+              <div>
+                {['Sanctuary/Farm visit', 'Cow cuddling', 'Cow feeding', 'Cow Talk', 'Cow community service', 'Cow milking'].map((activity) => (
+                  <label key={activity} style={{ marginRight: 18 }}>
+                    <input
+                      type="checkbox"
+                      name="activitiesonsite"
+                      value={activity}
+                      checked={formData.activitiesonsite.includes(activity)}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setFormData((prev) => ({
+                          ...prev,
+                          activitiesonsite: checked
+                            ? [...prev.activitiesonsite, activity]
+                            : prev.activitiesonsite.filter((a) => a !== activity),
+                        }));
+                      }}
+                    />
+                    {activity}
+                  </label>
+                ))}
+                <label>
+                  <input
+                    type="checkbox"
+                    name="activitiesonsite"
+                    value="Others"
+                    checked={formData.activitiesonsite.includes('Others')}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setFormData((prev) => ({
+                        ...prev,
+                        activitiesonsite: checked
+                          ? [...prev.activitiesonsite, 'Others']
+                          : prev.activitiesonsite.filter((a) => a !== 'Others'),
+                      }));
+                    }}
+                  />
+                  Others (please specify)
+                </label>
+                {formData.activitiesonsite.includes('Others') && (
+                  <input
+                    type="text"
+                    name="activitiesonsiteother"
+                    value={formData.activitiesonsiteother}
+                    onChange={handleChange}
+                    placeholder="Example – Cow based - Sanctuary Tour, Kids Games, School Educational Activities, College Trips, etc."
+                    style={styles.input}
+                  />
+                )}
+              </div>
+            </div>
+
+            <div style={styles.formGroup}>
+              <label style={styles.label}>
+                Types of cow-based activities we wish to organize in your locality anytime during the celebration period from 15-Aug-25 to 01-Sep-25:
+              </label>
+              <div>
+                {['Cow Conferences', 'Value based education', 'Seminars in School / Colleges', 'Group excursions', 'Inviting leaders/celebrities etc for the event', 'Social awareness', 'Debate competition'].map((activity) => (
+                  <label key={activity} style={{ marginRight: 18 }}>
+                    <input
+                      type="checkbox"
+                      name="activitieslocality"
+                      value={activity}
+                      checked={formData.activitieslocality.includes(activity)}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setFormData((prev) => ({
+                          ...prev,
+                          activitieslocality: checked
+                            ? [...prev.activitieslocality, activity]
+                            : prev.activitieslocality.filter((a) => a !== activity),
+                        }));
+                      }}
+                    />
+                    {activity}
+                  </label>
+                ))}
+                <label>
+                  <input
+                    type="checkbox"
+                    name="activitieslocality"
+                    value="Others"
+                    checked={formData.activitieslocality.includes('Others')}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setFormData((prev) => ({
+                        ...prev,
+                        activitieslocality: checked
+                          ? [...prev.activitieslocality, 'Others']
+                          : prev.activitieslocality.filter((a) => a !== 'Others'),
+                      }));
+                    }}
+                  />
+                  Others (please specify)
+                </label>
+                {formData.activitieslocality.includes('Others') && (
+                  <input
+                    type="text"
+                    name="activitieslocalityother"
+                    value={formData.activitieslocalityother}
+                    onChange={handleChange}
+                    placeholder="Please specify"
+                    style={styles.input}
+                  />
+                )}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleBack}
+              style={styles.button}
+            >
+              Back
+            </button>
+            <button
+              type="button"
+              onClick={() => setStep((prev) => prev + 1)}
+              style={styles.button}
+            >
+              Next
+            </button>
+          </div>
+        )}
+
+        {step === 4 && (
+          <div>
+            <h2 style={{ marginBottom: 16, fontSize: '1.5rem' }}>Review Your Information</h2>
+            <div style={styles.reviewContainer}>
+              {Object.entries(formData).map(([key, value]) => (
+                <div key={key} style={styles.reviewRow}>
+                  <strong style={styles.reviewLabel}>{key.replace(/([A-Z])/g, ' $1')}: </strong>
+                  <span style={styles.reviewValue}>
+                    {Array.isArray(value) ? value.join(', ') : value}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div style={{
+              background: '#f6f8fa',
+              border: '1px solid #e2e2e2',
+              borderRadius: '7px',
+              padding: '18px',
+              marginBottom: '22px',
+              fontSize: '1.02rem',
+              color: '#333'
+            }}>
+              <b>NB –</b>
+              <ul style={{ marginTop: 8, marginBottom: 0, paddingLeft: 22 }}>
+                <li>
+                  The event is expected to be celebrated by the host on all days from 15th Aug to 01st Sep 2025, however, due to genuine reason if the same is not possible then only the host is required to host the event on customized days.
+                </li>
+                <li>
+                  Information about your organization is required to validate that the host is an authorized government recognized registered organization.
+                </li>
+                <li>
+                  Your address and location details as required will be visible on the location map to the participants visiting your sanctuary/farm for the World Cow Day event.
+                </li>
+                <li>
+                  Please ensure to take care of all safety measures and crowd management.
+                </li>
+                <li>
+                  Ensure safety of children from cows/calves or any other animals present in the sanctuary/farm.
+                </li>
+                <li>
+                  Please ensure sufficient facilities are available like parking, restrooms, etc. for the visitors.
+                </li>
+                <li>
+                  Please ensure sufficient facilities for senior citizens or differently abled visitors (if any).
+                </li>
+                <li>
+                  Post submission of the registration form, you will receive the hosting badge for World Cow Day event.
+                </li>
+              </ul>
+            </div>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Declarations (please check all to submit):</label>
+              <div>
+                <label>
+                  <input
+                    type="checkbox"
+                    name="hostingdeclaration"
+                    checked={formData.hostingdeclaration}
+                    onChange={handleChange}
+                    required
+                    style={{ marginRight: 8 }}
+                  />
+                  I am interested in hosting the World Cow Day event as per the guidelines of the event.
+                </label>
+              </div>
+              <div>
+                <label>
+                  <input
+                    type="checkbox"
+                    name="eligibilitydeclaration"
+                    checked={formData.eligibilitydeclaration}
+                    onChange={handleChange}
+                    required
+                    style={{ marginRight: 8 }}
+                  />
+                  I agree with the eligibility criteria for hosting the World Cow Day event.
+                </label>
+              </div>
+              <div>
+                <label>
+                  <input
+                    type="checkbox"
+                    name="informationdeclaration"
+                    checked={formData.informationdeclaration}
+                    onChange={handleChange}
+                    required
+                    style={{ marginRight: 8 }}
+                  />
+                  I confirm all the information provided is true.
+                </label>
+              </div>
+              <div>
+                <label>
+                  <input
+                    type="checkbox"
+                    name="sharingdetailsdeclaration"
+                    checked={formData.sharingdetailsdeclaration}
+                    onChange={handleChange}
+                    required
+                    style={{ marginRight: 8 }}
+                  />
+                  I give my consent to share my sanctuary details with the participants during the World Cow Day event through the World Cow Day website.
+                </label>
+              </div>
+              <div>
+                <label>
+                  <input
+                    type="checkbox"
+                    name="socialmediaconsentdeclaration"
+                    checked={formData.socialmediaconsentdeclaration}
+                    onChange={handleChange}
+                    required
+                    style={{ marginRight: 8 }}
+                  />
+                  I give my consent to use the content that will be posted by us on our social media handles during the World Cow Day Event for promotion of World Cow Day activities.
+                </label>
+              </div>
+            </div>
+            
             <button
               type="button"
               onClick={handleBack}
@@ -481,7 +1152,7 @@ const styles = {
     padding: '12px 28px',
     border: 'none',
     borderRadius: '7px',
-    backgroundColor: '#0070f3',
+    backgroundColor: '#0070f3', // enabled color
     color: '#fff',
     cursor: 'pointer',
     marginRight: '14px',
@@ -489,6 +1160,7 @@ const styles = {
     fontSize: '1.08rem',
     fontWeight: 'bold',
     transition: 'background 0.2s',
+    // Do not add disabled color here, handle it inline as above
   },
   message: {
     padding: '14px',
@@ -515,5 +1187,23 @@ const styles = {
     padding: '18px 0 28px 0',
     minHeight: '180px',
     fontSize: '1.08rem',
+  },
+  reviewContainer: {
+    backgroundColor: '#fff',
+    padding: '20px',
+    borderRadius: '8px',
+    border: '1px solid #ddd',
+    marginBottom: '20px',
+  },
+  reviewRow: {
+    marginBottom: '12px',
+    fontSize: '1.05rem',
+  },
+  reviewLabel: {
+    fontWeight: 'bold',
+  },
+  reviewValue: {
+    marginLeft: '8px',
+    color: '#333',
   },
 };
