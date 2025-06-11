@@ -3,9 +3,7 @@ import { supabase } from '../../lib/supabaseClient';
 
 export default function Register() {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    address: '',
+    email: '',   
     phone: '',
     organizationtype: '',
     organizationtypeother: '',
@@ -48,18 +46,29 @@ export default function Register() {
     slotafternoonto: '',
     sloteveningfrom: '',
     sloteveningto: '',
-    activitiesonsite: [], // array of strings
+    activitiesonsite: [],
     activitiesonsiteother: '',
-    activitieslocality: [], // array of strings
+    activitieslocality: [],
     activitieslocalityother: '',
   });
 
+  const [errors, setErrors] = useState({});
   const [message, setMessage] = useState({ type: '', text: '' });
-  const [step, setStep] = useState(0); // Start at 0 for the new intro page
-  const [activeTab, setActiveTab] = useState(0); // 0 or 1 for the two tabs
+  const [step, setStep] = useState(0);
+  const [activeTab, setActiveTab] = useState(0);
   const [tab0Scrolled, setTab0Scrolled] = useState(false);
   const [tab1Scrolled, setTab1Scrolled] = useState(false);
-  const [warning, setWarning] = useState(''); // Add after message state
+  const [warning, setWarning] = useState('');
+
+  // Refs for required fields
+  const registeredorgnameRef = useRef(null);
+  const phoneRef = useRef(null);
+  const emailRef = useRef(null);
+  const visitaddressRef = useRef(null);
+  const numcowsRef = useRef(null);
+  const countryRef = useRef(null);
+  const stateRef = useRef(null);
+  const cityRef = useRef(null);
 
   const tab0Ref = useRef(null);
   const tab1Ref = useRef(null);
@@ -70,9 +79,9 @@ export default function Register() {
       ...formData,
       [name]: type === 'checkbox' ? checked : value,
     });
+    setErrors((prev) => ({ ...prev, [name]: undefined }));
   };
 
-  // Enable checkbox only after scrolling to bottom of tab content
   const handleTabScroll = (tabIndex) => {
     const ref = tabIndex === 0 ? tab0Ref : tab1Ref;
     if (ref.current) {
@@ -101,10 +110,21 @@ export default function Register() {
     e.preventDefault();
     setMessage({ type: '', text: '' });
 
+    // Validation for required fields
+    let newErrors = {};
+    if (!formData.registeredorgname) newErrors.registeredorgname = 'Required';
+    if (!formData.phone) newErrors.phone = 'Required';
+    if (!formData.email) newErrors.email = 'Required';
+    if (!formData.visitaddress) newErrors.visitaddress = 'Required';
+    if (!formData.numcows || Number(formData.numcows) <= 0) newErrors.numcows = 'Required';
+    if (!formData.country) newErrors.country = 'Required';
+    if (!formData.state) newErrors.state = 'Required';
+    if (!formData.city) newErrors.city = 'Required';
+
+    // Phone format
     const phoneRegex = /^[0-9]{10}$/;
-    if (!phoneRegex.test(formData.phone)) {
-      setMessage({ type: 'error', text: 'Invalid phone number. Please enter a 10-digit number.' });
-      return;
+    if (formData.phone && !phoneRegex.test(formData.phone)) {
+      newErrors.phone = 'Enter a valid 10-digit phone number';
     }
 
     if (
@@ -118,9 +138,53 @@ export default function Register() {
       return;
     }
 
-    const submissionData = { ...formData };
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
 
-    // If alldayfrom and alldayto are filled, remove all slot fields from submission
+      // Map each field to its step
+      const fieldStepMap = {
+        registeredorgname: 1,
+        phone: 1,
+        email: 1,
+        visitaddress: 1,
+        country: 1,
+        state: 1,
+        city: 1,
+        numcows: 2,
+      };
+      const fieldRefMap = {
+        registeredorgname: registeredorgnameRef,
+        phone: phoneRef,
+        email: emailRef,
+        visitaddress: visitaddressRef,
+        numcows: numcowsRef,
+        country: countryRef,
+        state: stateRef,
+        city: cityRef,
+      };
+      const firstErrorField = Object.keys(newErrors)[0];
+      const errorStep = fieldStepMap[firstErrorField];
+
+      // If not on the step with the error, switch to it first, then focus after render
+      if (step !== errorStep) {
+        setStep(errorStep);
+        setTimeout(() => {
+          if (fieldRefMap[firstErrorField] && fieldRefMap[firstErrorField].current) {
+            fieldRefMap[firstErrorField].current.focus();
+          }
+        }, 100);
+      } else {
+        setTimeout(() => {
+          if (fieldRefMap[firstErrorField] && fieldRefMap[firstErrorField].current) {
+            fieldRefMap[firstErrorField].current.focus();
+          }
+        }, 0);
+      }
+      return;
+    }
+    setErrors({});
+
+    const submissionData = { ...formData };
     if (submissionData.alldayfrom && submissionData.alldayto) {
       delete submissionData.slotmorningfrom;
       delete submissionData.slotmorningto;
@@ -142,7 +206,6 @@ export default function Register() {
         setMessage({ type: 'error', text: 'Failed to register. Please try again.' });
       }
     } else {
-      console.log('Data inserted:', data);
       setMessage({ type: 'success', text: 'Registration successful!' });
       setFormData({
         name: '',
@@ -178,10 +241,10 @@ export default function Register() {
         uniqueinitiative: '',
         awards: '',
         participation: '',
-        eventdays: '', // 'all' or 'custom'
+        eventdays: '',
         customdays: '',
         customdaysreason: '',
-        visittimingtype: '', // 'all' or 'slot'
+        visittimingtype: '',
         alldayfrom: '',
         alldayto: '',
         slotmorningfrom: '',
@@ -190,9 +253,9 @@ export default function Register() {
         slotafternoonto: '',
         sloteveningfrom: '',
         sloteveningto: '',
-        activitiesonsite: [], // array of strings
+        activitiesonsite: [],
         activitiesonsiteother: '',
-        activitieslocality: [], // array of strings
+        activitieslocality: [],
         activitieslocalityother: '',
       });
       setTab0Scrolled(false);
@@ -200,14 +263,13 @@ export default function Register() {
     }
   };
 
-  // Only allow proceeding if both checkboxes are checked
   const canProceed = formData.agreetab0 && formData.agreetab1;
 
   return (
     <div style={styles.container}>
       <h1 style={styles.title}>
         <b>Registration Form</b>
-      </h1>     
+      </h1>
       {message.text && (
         <div
           style={{
@@ -232,10 +294,7 @@ export default function Register() {
           {warning}
         </div>
       )}
-      <form
-        onSubmit={handleSubmit}
-        style={styles.form}
-      >
+      <form onSubmit={handleSubmit} style={styles.form}>
         {step === 0 && (
           <div>
             <div style={styles.tabs}>
@@ -280,9 +339,9 @@ export default function Register() {
                       <b>World Cow Day</b>
                     </h3>
                     <p>
-                     <b> To,<br />                      
-                      Sanctuaries, Rescue Centers,
-                      Cruelty-free Dairy Farms, Farm Communities.</b>
+                      <b> To,<br />
+                        Sanctuaries, Rescue Centers,
+                        Cruelty-free Dairy Farms, Farm Communities.</b>
                       <br /><br />
                       Greetings from World Cow Day Team!
                       World Cow Day is celebrated as a global day highlighting the significance of cows and their immense contribution towards sustainable development.
@@ -378,7 +437,7 @@ export default function Register() {
             </button>
           </div>
         )}
-        
+
         {step === 1 && (
           <div>
             <div style={styles.formGroup}>
@@ -414,13 +473,20 @@ export default function Register() {
             <div style={styles.formGroup}>
               <label style={styles.label}>Name of your Registered Organization:</label>
               <input
+                ref={registeredorgnameRef}
                 type="text"
                 name="registeredorgname"
                 value={formData.registeredorgname}
                 onChange={handleChange}
                 required
-                style={styles.input}
+                style={{
+                  ...styles.input,
+                  borderColor: errors.registeredorgname ? 'red' : '#ccc'
+                }}
               />
+              {errors.registeredorgname && (
+                <div style={{ color: 'red', fontSize: '0.95em' }}>{errors.registeredorgname}</div>
+              )}
             </div>
             <div style={styles.formGroup}>
               <label style={styles.label}>Name of the Founder(s), Trustee(s), Owner(s):</label>
@@ -447,46 +513,74 @@ export default function Register() {
             <div style={styles.formGroup}>
               <label style={styles.label}>Country:</label>
               <input
+                ref={countryRef}
                 type="text"
                 name="country"
                 value={formData.country}
                 onChange={handleChange}
                 required
-                style={styles.input}
+                style={{
+                  ...styles.input,
+                  borderColor: errors.country ? 'red' : '#ccc'
+                }}
               />
+              {errors.country && (
+                <div style={{ color: 'red', fontSize: '0.95em' }}>{errors.country}</div>
+              )}
             </div>
             <div style={styles.formGroup}>
               <label style={styles.label}>State / Province:</label>
               <input
+                ref={stateRef}
                 type="text"
                 name="state"
                 value={formData.state}
                 onChange={handleChange}
                 required
-                style={styles.input}
+                style={{
+                  ...styles.input,
+                  borderColor: errors.state ? 'red' : '#ccc'
+                }}
               />
+              {errors.state && (
+                <div style={{ color: 'red', fontSize: '0.95em' }}>{errors.state}</div>
+              )}
             </div>
             <div style={styles.formGroup}>
               <label style={styles.label}>City / Town / Village:</label>
               <input
+                ref={cityRef}
                 type="text"
                 name="city"
                 value={formData.city}
                 onChange={handleChange}
                 required
-                style={styles.input}
+                style={{
+                  ...styles.input,
+                  borderColor: errors.city ? 'red' : '#ccc'
+                }}
               />
+              {errors.city && (
+                <div style={{ color: 'red', fontSize: '0.95em' }}>{errors.city}</div>
+              )}
             </div>
             <div style={styles.formGroup}>
               <label style={styles.label}>Address for visit:</label>
               <input
+                ref={visitaddressRef}
                 type="text"
                 name="visitaddress"
                 value={formData.visitaddress}
                 onChange={handleChange}
                 required
-                style={styles.input}
+                style={{
+                  ...styles.input,
+                  borderColor: errors.visitaddress ? 'red' : '#ccc'
+                }}
               />
+              {errors.visitaddress && (
+                <div style={{ color: 'red', fontSize: '0.95em' }}>{errors.visitaddress}</div>
+              )}
             </div>
             <div style={styles.formGroup}>
               <label style={styles.label}>Location link:</label>
@@ -501,24 +595,38 @@ export default function Register() {
             <div style={styles.formGroup}>
               <label style={styles.label}>Email ID:</label>
               <input
+                ref={emailRef}
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
                 required
-                style={styles.input}
+                style={{
+                  ...styles.input,
+                  borderColor: errors.email ? 'red' : '#ccc'
+                }}
               />
+              {errors.email && (
+                <div style={{ color: 'red', fontSize: '0.95em' }}>{errors.email}</div>
+              )}
             </div>
             <div style={styles.formGroup}>
               <label style={styles.label}>Phone No.:</label>
               <input
+                ref={phoneRef}
                 type="tel"
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
                 required
-                style={styles.input}
+                style={{
+                  ...styles.input,
+                  borderColor: errors.phone ? 'red' : '#ccc'
+                }}
               />
+              {errors.phone && (
+                <div style={{ color: 'red', fontSize: '0.95em' }}>{errors.phone}</div>
+              )}
             </div>
             <div style={styles.formGroup}>
               <label style={styles.label}>Website link:</label>
@@ -562,14 +670,21 @@ export default function Register() {
             <div style={styles.formGroup}>
               <label style={styles.label}>Number of Cows:</label>
               <input
+                ref={numcowsRef}
                 type="number"
                 name="numcows"
                 value={formData.numcows}
                 onChange={handleChange}
                 min="0"
                 required
-                style={styles.input}
+                style={{
+                  ...styles.input,
+                  borderColor: errors.numcows ? 'red' : '#ccc'
+                }}
               />
+              {errors.numcows && (
+                <div style={{ color: 'red', fontSize: '0.95em' }}>{errors.numcows}</div>
+              )}
             </div>
             <div style={styles.formGroup}>
               <label style={styles.label}>Number of Bulls, Oxen, Calves:</label>
@@ -716,7 +831,7 @@ export default function Register() {
                     required
                     style={{ marginRight: 8 }}
                   />
-                  On Custom Days - 
+                  On Custom Days -
                 </label>
                 <input
                   type="text"
@@ -1086,7 +1201,7 @@ export default function Register() {
                 </label>
               </div>
             </div>
-            
+
             <button
               type="button"
               onClick={handleBack}
@@ -1109,8 +1224,8 @@ export default function Register() {
 
 const styles = {
   container: {
-    maxWidth: '900px', // Increased width
-    minHeight: '80vh', // Taller container
+    maxWidth: '900px',
+    minHeight: '80vh',
     margin: '40px auto',
     padding: '40px',
     border: '1px solid #ccc',
@@ -1152,7 +1267,7 @@ const styles = {
     padding: '12px 28px',
     border: 'none',
     borderRadius: '7px',
-    backgroundColor: '#0070f3', // enabled color
+    backgroundColor: '#0070f3',
     color: '#fff',
     cursor: 'pointer',
     marginRight: '14px',
@@ -1160,7 +1275,6 @@ const styles = {
     fontSize: '1.08rem',
     fontWeight: 'bold',
     transition: 'background 0.2s',
-    // Do not add disabled color here, handle it inline as above
   },
   message: {
     padding: '14px',
