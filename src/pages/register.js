@@ -184,7 +184,39 @@ export default function Register() {
     }
     setErrors({});
 
+    /*let attachmentUrls = [];
+    if (formData.attachments && formData.attachments.length > 0) {
+      for (const file of formData.attachments) {
+        // Create a unique filename (e.g., with timestamp)
+        const fileExt = file.name.split('.').pop();
+        const filePath = `${Date.now()}_${file.name}`;
+        // Upload to Supabase Storage (bucket: 'attachments')
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('attachments')
+          .upload(filePath, file);
+        if (uploadError) {
+          console.log('Upload error:', uploadError);
+          setMessage({ type: 'error', text: `Failed to upload file: ${file.name}` });
+          return;
+        }
+        // Get public URL
+        const { data: publicUrlData } = supabase
+          .storage
+          .from('attachments')
+          .getPublicUrl(filePath);
+        if (publicUrlData?.publicUrl) {
+          attachmentUrls.push(publicUrlData.publicUrl);
+        }
+      }
+    }*/
+
+    // Add the URLs to your submission data
     const submissionData = { ...formData };
+    /*if (attachmentUrls.length > 0) {
+      submissionData.attachmentUrls = attachmentUrls;
+    }
+    delete submissionData.attachments; // Don't store File objects in DB*/
+
     if (submissionData.alldayfrom && submissionData.alldayto) {
       delete submissionData.slotmorningfrom;
       delete submissionData.slotmorningto;
@@ -327,7 +359,7 @@ export default function Register() {
                   <div
                     ref={tab0Ref}
                     style={{
-                      maxHeight: 120,
+                      maxHeight: 350,
                       overflowY: 'auto',
                       paddingRight: 10,
                       border: '1px solid #eee',
@@ -389,7 +421,7 @@ export default function Register() {
                   <div
                     ref={tab1Ref}
                     style={{
-                      maxHeight: 120,
+                      maxHeight: 350,
                       overflowY: 'auto',
                       paddingRight: 10,
                       border: '1px solid #eee',
@@ -785,6 +817,7 @@ export default function Register() {
                 rows={2}
               />
             </div>
+            
             <button
               type="button"
               onClick={handleBack}
