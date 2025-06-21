@@ -36,7 +36,7 @@ export default function Register() {
     participation: '',
     eventdays: '', // 'all' or 'custom'
     customdays: '',
-    customdaysreason: '',
+   // customdaysreason: '',
     visittimingtype: '', // 'all' or 'slot'
     alldayfrom: '',
     alldayto: '',
@@ -211,7 +211,7 @@ export default function Register() {
     }*/
 
     // Add the URLs to your submission data
-    const submissionData = { ...formData };
+    let submissionData = { ...formData };
     /*if (attachmentUrls.length > 0) {
       submissionData.attachmentUrls = attachmentUrls;
     }
@@ -226,6 +226,21 @@ export default function Register() {
       delete submissionData.sloteveningto;
     }
 
+    // If "custom" is selected, ensure customdays is an array of selected dates
+    if (submissionData.eventdays === 'custom') {
+      if (!Array.isArray(submissionData.customdays) || submissionData.customdays.length === 0) {
+        setMessage({ type: 'error', text: 'Please select at least one custom day.' });
+        return;
+      }
+    } else {
+      // If "all", you can optionally set customdays to null or the full range
+      submissionData.customdays = null;
+    }
+
+    // Remove any file objects before submitting
+    delete submissionData.attachments;
+
+    // Now insert into Supabase
     const { data, error } = await supabase
       .from('cowsanctuaries108')
       .insert([submissionData]);
@@ -275,7 +290,7 @@ export default function Register() {
         participation: '',
         eventdays: '',
         customdays: '',
-        customdaysreason: '',
+    //    customdaysreason: '',
         visittimingtype: '',
         alldayfrom: '',
         alldayto: '',
@@ -414,6 +429,19 @@ export default function Register() {
                     />
                     I agree
                   </label>
+                  {/* Next button is disabled until "I agree" is checked */}
+                  <button
+                    type="button"
+                    style={{
+                      ...styles.button,
+                      backgroundColor: !formData.agreetab0 ? '#cccccc' : styles.button.backgroundColor,
+                      cursor: !formData.agreetab0 ? 'not-allowed' : 'pointer',
+                    }}
+                    onClick={() => setActiveTab(1)}
+                    disabled={!formData.agreetab0}
+                  >
+                    Next
+                  </button>
                 </div>
               )}
               {activeTab === 1 && (
@@ -452,21 +480,22 @@ export default function Register() {
                     />
                     I agree
                   </label>
+                  {/* Show Proceed to Registration button only on second tab */}
+                  <button
+                    type="button"
+                    onClick={handleNext}
+                    style={{
+                      ...styles.button,
+                      backgroundColor: !canProceed ? '#cccccc' : styles.button.backgroundColor,
+                      cursor: !canProceed ? 'not-allowed' : 'pointer',
+                    }}
+                    disabled={!canProceed}
+                  >
+                    Proceed to Registration
+                  </button>
                 </div>
               )}
             </div>
-            <button
-              type="button"
-              onClick={handleNext}
-              style={{
-                ...styles.button,
-                backgroundColor: !canProceed ? '#cccccc' : styles.button.backgroundColor,
-                cursor: !canProceed ? 'not-allowed' : 'pointer',
-              }}
-              disabled={!canProceed}
-            >
-              Proceed to Registration
-            </button>
           </div>
         )}
 
@@ -866,24 +895,40 @@ export default function Register() {
                   />
                   On Custom Days -
                 </label>
-                <input
-                  type="text"
-                  name="customdays"
-                  value={formData.customdays}
-                  onChange={handleChange}
-                  placeholder="Enter custom days (01st Sep 2025 is mandatory)"
-                  style={{ ...styles.input, marginTop: 8, marginBottom: 8 }}
-                  disabled={formData.eventdays !== 'custom'}
-                />
-                <input
-                  type="text"
-                  name="customdaysreason"
-                  value={formData.customdaysreason}
-                  onChange={handleChange}
-                  placeholder="Reason for not hosting all days"
-                  style={styles.input}
-                  disabled={formData.eventdays !== 'custom'}
-                />
+                {/* Show checkboxes for each date if "custom" is selected */}
+                {formData.eventdays === 'custom' && (
+                  <div style={{ margin: '10px 0', display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+                    {Array.from({ length: 18 }).map((_, i) => {
+                      // Generate dates from 15-Aug-2025 to 01-Sep-2025
+                      const start = new Date(2025, 7, 15); // Months are 0-indexed (7 = August)
+                      const date = new Date(start);
+                      date.setDate(start.getDate() + i);
+                      const value = date.toISOString().slice(0, 10);
+                      const label = date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+                      return (
+                        <label key={value} style={{ minWidth: 120 }}>
+                          <input
+                            type="checkbox"
+                            name="customdays"
+                            value={value}
+                            checked={formData.customdays?.includes(value)}
+                            onChange={e => {
+                              let days = formData.customdays || [];
+                              if (e.target.checked) {
+                                days = [...days, value];
+                              } else {
+                                days = days.filter(d => d !== value);
+                              }
+                              setFormData(prev => ({ ...prev, customdays: days }));
+                            }}
+                          />
+                          {label}
+                        </label>
+                      );
+                    })}
+                  </div>
+                )}
+               
               </div>
             </div>
 
@@ -1140,9 +1185,9 @@ export default function Register() {
             }}>
               <b>NB –</b>
               <ul style={{ marginTop: 8, marginBottom: 0, paddingLeft: 22 }}>
-                <li>
+                {/* <li>
                   The event is expected to be celebrated by the host on all days from 15th Aug to 01st Sep 2025, however, due to genuine reason if the same is not possible then only the host is required to host the event on customized days.
-                </li>
+                </li> */}
                 <li>
                   Information about your organization is required to validate that the host is an authorized government recognized registered organization.
                 </li>
